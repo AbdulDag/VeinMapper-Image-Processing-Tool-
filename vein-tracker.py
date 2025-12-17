@@ -18,21 +18,27 @@ except FileNotFoundError: # Handles case where folder path not exists
     print("Error: The folder path is wrong. Check the path in 'dataset_path'")
 
 # -- Processing each image in dataset -- 
-#Loop through each image filename in filterd images list 
+# Loop through each image filename in filterd images list 
 for image_file in images: 
-    full_path = os.path.join(dataset_path, image_file) #Construct comeplte file path by joining directory path and filename
+    full_path = os.path.join(dataset_path, image_file) # Construct comeplte file path by joining directory path and filename
 
-    frame = cv2.imread(full_path)
-
+    frame = cv2.imread(full_path) # Reads image file from disk into memory as numpy array
+    
+    # Checking if image failed to load
     if frame is None: 
         print(f"Error loading image: {full_path}")
-        continue
-    gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+        continue # Skips to next image in the loop 
+    gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY) # Convert the image to greyscale
     
-    
+    # -- Enhance image contrast --
     clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
     enhanced = clahe.apply(gray)
+
+    #now we add adaptive thresholding
+    #we make the veins pure white and then use gaussian blur to smooth the image
+    veins = cv2.adaptiveThreshold(enhanced, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY_INV, 31, 5)
     
+    cv2.imshow("vein image of ahmed sial", veins)
     cv2.imshow("raw image of ahmed sial", gray)
     cv2.imshow("enhanced image of ahmed sial", enhanced)
 
