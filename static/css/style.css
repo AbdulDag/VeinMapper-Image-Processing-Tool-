@@ -1,0 +1,87 @@
+:root {
+    --bg-color: #f4f6f9;
+    --sidebar-w: 240px;
+    --primary: #43a7c5;
+}
+
+body {
+    background-color: var(--bg-color);
+    font-family: 'Segoe UI', sans-serif;
+    overflow: hidden; /* DISABLE SCROLLING */
+    height: 100vh;
+}
+
+#wrapper {
+    display: flex;
+    height: 100vh;
+}
+
+/* Compact Sidebar */
+#sidebar-wrapper {
+    width: var(--sidebar-w);
+    background: white;
+    border-right: 1px solid #ddd;
+    display: flex;
+    flex-direction: column;
+}
+
+#page-content-wrapper {
+    flex: 1;
+    padding: 15px;
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+}
+
+/* Compact Cards Row */
+.stat-card {
+    background: white;
+    padding: 10px;
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    height: 80px; /* Fixed height */
+}
+
+/* Main Layout Grid */
+.main-grid {
+    display: grid;
+    grid-template-columns: 2fr 1fr; /* Image takes 2 parts, Chart takes 1 */
+    gap: 15px;
+    flex: 1; /* Take remaining height */
+    min-height: 0; /* Important for scroll prevention */
+}
+
+/* Image Container */
+.image-container {
+    background: #000;
+    border-radius: 10px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+    overflow: hidden;
+}
+
+#dashboard-display {
+    max-height: 100%;
+    max-width: 100%;
+    object-fit: contain;
+}
+
+/* Right Side Panel */
+.right-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.chart-container {
+    background: white;
+    padding: 10px;
+    border-radius: 10px;
+    flex: 1;
+    position: relative;
+}

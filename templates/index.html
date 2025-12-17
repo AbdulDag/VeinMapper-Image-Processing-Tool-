@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VeinMapper Pro</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        .legend-dot {
+            height: 12px;
+            width: 12px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 8px;
+        }
+        .dot-red { background-color: #ff0000; box-shadow: 0 0 5px rgba(255,0,0,0.5); }
+        .dot-blue { background-color: #0000ff; box-shadow: 0 0 5px rgba(0,0,255,0.5); }
+        
+        /* New Style for Detailed Cards */
+        .stat-label { font-size: 0.9rem; font-weight: 600; color: #444; }
+        .stat-desc { font-size: 0.7rem; color: #888; display: block; margin-top: -2px;}
+    </style>
+</head>
+<body>
+
+<div id="wrapper">
+    <div id="sidebar-wrapper">
+        <div class="p-3 text-center border-bottom">
+            <h4 class="fw-bold text-primary"><i class="fas fa-heartbeat me-2"></i>VeinPro</h4>
+        </div>
+        <div class="list-group list-group-flush my-3">
+            <a href="#" class="list-group-item list-group-item-action active border-0"><i class="fas fa-th-large me-2"></i> Dashboard</a>
+            <a href="#" class="list-group-item list-group-item-action border-0"><i class="fas fa-user-injured me-2"></i> Patients</a>
+            <a href="#" class="list-group-item list-group-item-action border-0"><i class="fas fa-cog me-2"></i> Settings</a>
+        </div>
+    </div>
+
+    <div id="page-content-wrapper">
+        
+        <div class="row g-3 mb-3">
+            <div class="col-md-3">
+                <div class="stat-card">
+                    <div>
+                        <h4 id="s-total" class="mb-0">--</h4>
+                        <span class="stat-label">Patient Database</span>
+                        <small class="stat-desc">Total records stored</small>
+                    </div>
+                    <i class="fas fa-database fs-3 text-primary opacity-50"></i>
+                </div>
+            </div>
+            
+            <div class="col-md-3">
+                <div class="stat-card">
+                    <div>
+                        <h4 id="s-today" class="mb-0">--</h4>
+                        <span class="stat-label">Daily Throughput</span>
+                        <small class="stat-desc">Scans processed today</small>
+                    </div>
+                    <i class="fas fa-chart-line fs-3 text-success opacity-50"></i>
+                </div>
+            </div>
+            
+            <div class="col-md-3">
+                <div class="stat-card">
+                    <div>
+                        <h4 id="s-qual" class="mb-0">--%</h4>
+                        <span class="stat-label">Vein Visibility</span>
+                        <small class="stat-desc">Avg. CLAHE contrast score</small>
+                    </div>
+                    <i class="fas fa-eye fs-3 text-info opacity-50"></i>
+                </div>
+            </div>
+            
+            <div class="col-md-3">
+                <div class="stat-card">
+                    <div>
+                        <h4 id="s-pend" class="mb-0">--</h4>
+                        <span class="stat-label">Action Required</span>
+                        <small class="stat-desc">Pending physician review</small>
+                    </div>
+                    <i class="fas fa-clipboard-list fs-3 text-warning opacity-50"></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="main-grid">
+            
+            <div class="image-container shadow-sm">
+                <img id="dashboard-display" src="/dashboard_image" alt="Vein Analysis">
+                
+                <div class="position-absolute bottom-0 start-50 translate-middle-x mb-3 d-flex gap-3">
+                    <button class="btn btn-light rounded-pill px-4 shadow" onclick="changeImage('/prev')"><i class="fas fa-arrow-left"></i> Prev</button>
+                    <span class="badge bg-dark align-self-center px-3 py-2" id="patient-badge">Loading...</span>
+                    <button class="btn btn-primary rounded-pill px-4 shadow" onclick="changeImage('/next')">Next <i class="fas fa-arrow-right"></i></button>
+                </div>
+            </div>
+
+            <div class="right-panel">
+                
+                <div class="chart-container shadow-sm">
+                    <h6 class="text-muted mb-2 fw-bold">Daily Throughput</h6>
+                    <div style="height: 180px;"><canvas id="chart1"></canvas></div>
+                </div>
+
+                <div class="card shadow-sm border-0">
+                    <div class="card-body py-2">
+                        <h6 class="text-muted fw-bold mb-2 small">Biometric Map Legend</h6>
+                        <div class="d-flex align-items-center mb-2">
+                            <span class="legend-dot dot-red"></span>
+                            <div>
+                                <strong style="font-size: 0.9rem;">Bifurcation (Split)</strong>
+                                <div class="text-muted" style="font-size: 0.75rem;">High risk of valve. <b>Avoid injection.</b></div>
+                            </div>
+                        </div>
+                        <div class="d-flex align-items-center">
+                            <span class="legend-dot dot-blue"></span>
+                            <div>
+                                <strong style="font-size: 0.9rem;">Endpoint (Termination)</strong>
+                                <div class="text-muted" style="font-size: 0.75rem;">Vein ends/dives. <b>Do not cannulate.</b></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="chart-container shadow-sm" style="overflow-y: auto; flex: 1;">
+                    <h6 class="text-muted mb-2 fw-bold">Recent System Logs</h6>
+                    <ul class="list-group list-group-flush small">
+                        <li class="list-group-item px-0">Scan #1024 complete <span class="float-end text-success">Done</span></li>
+                        <li class="list-group-item px-0">Dr. Smith requested export <span class="float-end text-warning">Pending</span></li>
+                        <li class="list-group-item px-0">System Update <span class="float-end text-muted">2h ago</span></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    // 1. Load Data
+    function refreshData() {
+        fetch('/api/dashboard-data').then(r => r.json()).then(data => {
+            document.getElementById('s-total').innerText = data.cards.total;
+            document.getElementById('s-today').innerText = data.cards.today;
+            document.getElementById('s-qual').innerText = data.cards.quality;
+            document.getElementById('s-pend').innerText = data.cards.pending;
+            document.getElementById('patient-badge').innerText = data.current_patient_id;
+        });
+    }
+
+    // 2. Change Image
+    function changeImage(route) {
+        fetch(route, { method: 'POST' }).then(() => {
+            document.getElementById('dashboard-display').src = "/dashboard_image?" + new Date().getTime();
+            refreshData();
+        });
+    }
+
+    // 3. Init Chart
+    new Chart(document.getElementById('chart1'), {
+        type: 'line',
+        data: {
+            labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'],
+            datasets: [{
+                label: 'Processed',
+                data: [12, 19, 15, 25, 22, 30],
+                borderColor: '#43a7c5',
+                tension: 0.4,
+                fill: true,
+                backgroundColor: 'rgba(67, 167, 197, 0.1)'
+            }]
+        },
+        options: { 
+            responsive: true, 
+            maintainAspectRatio: false, 
+            plugins: { legend: { display: false } },
+            scales: {
+                x: {
+                    title: { display: true, text: 'Day of Week', color: '#888', font: { size: 10 } },
+                    grid: { display: false }
+                },
+                y: {
+                    title: { display: true, text: 'Patients Scanned', color: '#888', font: { size: 10 } },
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+
+    refreshData();
+</script>
+
+</body>
+</html>

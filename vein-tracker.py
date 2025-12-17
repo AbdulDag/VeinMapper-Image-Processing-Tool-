@@ -8,7 +8,7 @@ import numpy as np
 
 # -- Dataset Setup -- 
 dataset_path = r"C:\Users\dagab\Desktop\vein-mapper\Finger Vein Database\002\left"  # Path to the dataset directory
-
+UI_SCALE = 2.0
 try:
     file_list = os.listdir(dataset_path) # Getting a list of files in dataset directory
     images = [f for f in file_list if f.endswith(('.bmp', '.png', '.jpg'))] # filters Image files and only keeps files with vaild image extentsions
@@ -91,18 +91,7 @@ for image_file in images:
         # Stop if the image is completely black
         if cv2.countNonZero(temp_img) == 0:
             break
-    # Feature extraction part now using a cv technique called shi-tomasi corner detection
-   
-    # Now draw red dots but we cant so convert first since its skelly is just black/white
-    # ... after your skeleton loop finishes ...
-
-    # --- FINAL STEP: STRUCTURAL MAPPING ---
-    # Goal: Mark "Intersections" (Splits) and "Endpoints" so the doctor sees the network structure.
-    
-    # 1. Prepare color image
-    # ... after your skeleton loop finishes ...
-
-    # --- FINAL STEP: CLEAN STRUCTURAL MAPPING ---
+  
     
     # 1. Prepare color image
     rgb_skeleton = cv2.cvtColor(skeleton, cv2.COLOR_GRAY2BGR) #Converts greysacle skeleton to BGR color format
@@ -116,31 +105,32 @@ for image_file in images:
     skeleton_bool = skeleton // 255
     rows, cols = np.nonzero(skeleton_bool) # Gets coordinates of all white pixels
     
+    # Loops through each vein pixel to classify as endpoint or normal point
     for r, c in zip(rows, cols):
         if r == 0 or r == skeleton.shape[0]-1 or c == 0 or c == skeleton.shape[1]-1:
             continue
             
         window = skeleton_bool[r-1:r+2, c-1:c+2]
-        neighbors = np.sum(window) - 1
+        neighbors = np.sum(window) - 1 # Counts the number of white neighbors not including center pixels itself
         
-        if neighbors == 1:
+        if neighbors == 1: # Classifying point based on number of neighbors ( 1 neighbor = endppint)
             endpoints.append((c,r))      # Add to blue list
         elif neighbors >= 3:
             bifurcations.append((c,r))   # Add to red list
 
     # --- THE CLUTTER FILTER ---
     # Function to remove dots that are too close to each other
-    def filter_points(points, min_dist=15):
-        clean_points = []
-        for p in points:
+    def filter_points(points, min_dist=15): # Prevents duplicate/clustered detections of same feature
+        clean_points = [] # Initializing empty list to store filtered points 
+        for p in points: # Loop for each point to check if its too close to already saved points 
             # Check if 'p' is close to any point we already saved
             is_clutter = False
-            for saved_p in clean_points:
+            for saved_p in clean_points: # Calculates Eculidean distance between points 
                 dist = np.sqrt((p[0]-saved_p[0])**2 + (p[1]-saved_p[1])**2)
-                if dist < min_dist:
+                if dist < min_dist: #If distance is less then minium threshold, mark as clutter 
                     is_clutter = True
                     break
-            if not is_clutter:
+            if not is_clutter: #Only add point if it NOT too close to existing points 
                 clean_points.append(p)
         return clean_points
 
@@ -154,31 +144,18 @@ for image_file in images:
         
     for pt in clean_blues:
         cv2.circle(rgb_skeleton, pt, 3, (255, 0, 0), -1) # Blue
-
-    cv2.imshow("Vein Network Structure", rgb_skeleton)
-    #
+    # Displays the vein network with bifurcations red and blue endpoints marked 
+    cv2.imshow("Vein Network Structure", rgb_skeleton) 
+    
     # Show the final result with keypoints
     cv2.imshow("Skeleton (Final Map)", skeleton)
     
     # ... then your other imshow lines ...
     cv2.imshow("vein image of ahmed sial", clean_veins)
-    cv2.imshow("raw image of ahmed sial", gray)
-    cv2.imshow("enhanced image of ahmed sial", enhanced)
+    cv2.imshow("raw image of ahmed sial", gray) # Display the original greyscale finger image
+    cv2.imshow("enhanced image of ahmed sial", enhanced) # Display the contrast-enhanced version of the image
 
     
-
-
-
-
-# image processing and display logic here bruh 
-
-
-
-
-
-
-
-
     # Check if 'q' key was pressed to quit program
     key =  cv2.waitKey(0) & 0xFF
     if key == ord('q'):
